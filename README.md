@@ -2,11 +2,13 @@
 
 The Polycentric Commonwealth is an open design for layered, accountable self-government, from the local to the global level, built to share prosperity and resist the concentration of power. This repository holds its foundation: the design documents, the shared protocol specifications every platform speaks, and the record of decisions behind them.
 
+New here? Start with the [ten-minute explainer](docs/explainer.md). To help, see [contributing](CONTRIBUTING.md).
+
 ## What is here
 
 | Folder | Contents |
 | --- | --- |
-| [`docs/design/`](docs/design/) | The system design and the plan for the per-layer web platforms |
+| [`docs/`](docs/) | The [explainer](docs/explainer.md), the system design and the plan for the per-layer web platforms |
 | [`specs/`](specs/) | The shared protocol: signed records, integration messages, schemas and conformance (early drafts) |
 | [`decisions/`](decisions/) | Short records of key decisions and why they were made |
 | [`canonical/`](canonical/), [`record/`](record/), [`registry/`](registry/) | The Go core library: canonical JSON, signed records, and the instance registry that decides which keys to trust |
