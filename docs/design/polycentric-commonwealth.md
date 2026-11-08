@@ -131,7 +131,7 @@ The aim is to stop advantage compounding into permanent castes, not to equalize 
 
 ### Money
 
-States keep their own currencies and central banks. The Commonwealth uses a basket unit of account for the dividend and its own budget. A single currency is never imposed, because the euro's history shows the cost of sharing money without sharing fiscal policy.
+States keep their own currencies and central banks. The Commonwealth uses a basket unit of account, the XCU, for the dividend and its own budget ([unit of account](../../specs/unit-of-account.md)). A single currency is never imposed, because the euro's history shows the cost of sharing money without sharing fiscal policy.
 
 ## 4. Anti-capture governance
 

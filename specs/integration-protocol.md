@@ -72,7 +72,7 @@ sequenceDiagram
     C-->>S: receipt/1 accepted
 ```
 
-Amounts are decimal strings, as the record format requires: up to 18 digits before the decimal point and up to 6 after, with no sign, exponent or leading zeros. Amounts are compared by value, so `"25.5"` and `"25.50"` are equal. The `unit` of account for the dividend is provisionally `XCU`, the Commonwealth's basket unit.
+Amounts are decimal strings, as the record format requires: up to 18 digits before the decimal point and up to 6 after, with no sign, exponent or leading zeros. Amounts are compared by value, so `"25.5"` and `"25.50"` are equal. The `unit` of account for the dividend is `XCU`, the Commonwealth's basket unit of account; see the [unit of account](unit-of-account.md) specification for its value and how amounts are converted to local currency.
 
 Every count is subject to an [eligibility audit](eligibility-audit.md) of a random sample of its committed recipient list.
 

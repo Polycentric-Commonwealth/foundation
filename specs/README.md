@@ -12,6 +12,7 @@ The Commonwealth protocol: everything a platform must implement to interoperate 
 | [Integration protocol](integration-protocol.md) | Delivery to inboxes, signed receipts, message types and the dividend settlement flow | Draft 0.1, implemented in [`protocol/`](../protocol/) and [`dividend/`](../dividend/) |
 | [Instance registry](instance-registry.md) | How instances publish their identity, layer, keys and endpoints, and how verifiers decide which keys to trust | Draft 0.1, implemented in [`registry/`](../registry/) |
 | [Eligibility audit](eligibility-audit.md) | How a State commits to the people it counts, and how the Audit Office checks a random sample | Draft 0.1, implemented in [`audit/`](../audit/) |
+| [Unit of account](unit-of-account.md) | The XCU: what it is worth, the daily fixing, and conversion to and from local currencies | Draft 0.1, not yet implemented |
 | Federated identity | State-issued identifiers and privacy-preserving credentials | Not started |
 | [Public ledger](public-ledger.md) | Each instance's append-only log of official acts, witness cosigning, and evidence that a record existed by a given time | Draft 0.1, implemented in [`ledger/`](../ledger/) |
 | [Data schemas](schemas/) | Common formats for laws, budgets, statistics, payments and counts | Receipt and dividend schemas drafted |

@@ -19,3 +19,4 @@ Each record is a numbered Markdown file with these sections: **Status** (propose
 | [0007](0007-integration-transport-and-receipts.md) | HTTPS inboxes, signed recipients, signed receipts and idempotent delivery | Accepted for draft 0.1 |
 | [0008](0008-public-ledger.md) | Per-instance transparency logs, cosigned by witnesses, as the public ledger | Accepted for draft 0.1 |
 | [0009](0009-eligibility-audits.md) | Committed recipient lists and sampled audits to verify eligibility counts | Accepted for draft 0.1 |
+| [0010](0010-unit-of-account.md) | The XCU unit of account: pegged to the XDR at first, then a capped basket of members' currencies | Accepted for draft 0.1 |

@@ -19,14 +19,14 @@ import (
 	"github.com/polycentric-commonwealth/foundation/record"
 )
 
-// Message types and the provisional unit of account.
+// Message types and the unit of account.
 const (
 	EligibilityCountType = "eligibility-count/1"
 	SettlementType       = "dividend-settlement/1"
 	ConfirmationType     = "dividend-confirmation/1"
 
-	// Unit is the provisional code for the Commonwealth's basket unit of
-	// account.
+	// Unit is the XCU, the Commonwealth's basket unit of account
+	// (specs/unit-of-account.md).
 	Unit = "XCU"
 )
 
