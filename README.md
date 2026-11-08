@@ -9,7 +9,7 @@ The Polycentric Commonwealth is an open design for layered, accountable self-gov
 | [`docs/design/`](docs/design/) | The system design and the plan for the per-layer web platforms |
 | [`specs/`](specs/) | The shared protocol: signed records, integration messages, schemas and conformance (draft skeletons) |
 | [`decisions/`](decisions/) | Short records of key decisions and why they were made |
-| [`canonical/`](canonical/), [`record/`](record/) | The Go core library: canonical JSON and signed records |
+| [`canonical/`](canonical/), [`record/`](record/), [`registry/`](registry/) | The Go core library: canonical JSON, signed records, and the instance registry that decides which keys to trust |
 | [`cmd/pcrecord/`](cmd/pcrecord/) | A command-line tool to create keys and sign and verify records |
 
 ## How the pieces fit
@@ -22,7 +22,7 @@ Platform repositories (`platform-commonwealth`, `platform-region`, `platform-sta
 
 ## Status
 
-Early design, in build Stage A. The [signed record format](specs/record-format.md) is at draft 0.1 with a working Go implementation; the other specifications are skeletons. See the [platforms plan](docs/design/platforms-plan.md#10-build-roadmap-and-open-questions).
+Early design, in build Stage A. The [signed record format](specs/record-format.md) and [instance registry](specs/instance-registry.md) are at draft 0.1 with working Go implementations; the other specifications are skeletons. See the [platforms plan](docs/design/platforms-plan.md#10-build-roadmap-and-open-questions).
 
 ## Try it
 

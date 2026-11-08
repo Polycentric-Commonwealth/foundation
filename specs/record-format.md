@@ -38,8 +38,8 @@ All fields are required unless marked optional. An envelope with any other top-l
 | `spec` | The string `pc-record/0.1` | Envelope format version |
 | `id` | UUID version 7, lowercase, hyphenated (RFC 9562) | Unique identifier of this record |
 | `type` | `<name>/<major>`, where name is lowercase letters, digits and hyphens, for example `eligibility-count/1` | Payload type, referencing a schema in [`schemas/`](schemas/) |
-| `issuer` | Non-empty string, at most 256 characters; format to be set by the instance registry specification | Instance identifier of the issuer |
-| `key` | Non-empty string, at most 64 characters | Identifier of the issuer's signing key, as published in the instance registry |
+| `issuer` | An [instance identifier](instance-registry.md#instance-identifiers): a lowercase domain name | Instance identifier of the issuer |
+| `key` | Non-empty string, at most 64 characters, without spaces or control characters | Identifier of the issuer's signing key, as published in its [instance description](instance-registry.md#instance-description) |
 | `layer` | One of `commonwealth`, `region`, `state`, `locality` | Issuer's layer |
 | `issued_at` | RFC 3339 timestamp in UTC, ending in `Z` | Time of issue |
 | `supersedes` | UUID version 7 (optional) | `id` of an earlier record this one replaces |
@@ -55,10 +55,8 @@ Numbers anywhere in an envelope, including the payload, MUST be integers with ma
 1. Take the envelope as a JSON object and remove the `signature` member.
 2. Serialize it with the JSON Canonicalization Scheme (RFC 8785), producing UTF-8 bytes.
 3. **To sign:** compute the Ed25519 signature (RFC 8032) of those bytes with the issuer's private key, encode it as unpadded base64url, and set it as `signature`.
-4. **To verify:** check every field against the table above, look up the public key for `issuer` and `key`, and verify the decoded signature over those bytes. Verification fails if any check fails.
+4. **To verify:** check every field against the table above, look up the public key for `issuer` and `key` as described in the [instance registry](instance-registry.md#trust) (the key must be trusted and valid at `issued_at`), and verify the decoded signature over those bytes. Verification fails if any check fails.
 
 ## Still to decide
 
 - [ ] Multi-party signatures, for acts that need several signers (for example multi-key decisions).
-- [ ] Key rotation and revocation, and how old records stay verifiable afterwards (instance registry specification).
-- [ ] The instance identifier format (instance registry specification).

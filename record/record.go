@@ -70,9 +70,25 @@ type Envelope struct {
 }
 
 // KeyResolver looks up an issuer's public key, normally from the instance
-// registry.
+// registry. It must return an error unless the key is trusted and was valid
+// at the given time.
 type KeyResolver interface {
-	PublicKey(issuer, key string) (ed25519.PublicKey, error)
+	PublicKey(issuer, key string, at time.Time) (ed25519.PublicKey, error)
+}
+
+// ValidInstanceID reports whether s is a valid instance identifier: a
+// lowercase domain name with at least two labels (specs/instance-registry.md).
+func ValidInstanceID(s string) bool {
+	return len(s) <= 253 && instanceIDPattern.MatchString(s)
+}
+
+// IssuedAtTime returns the envelope's issued_at as a time.
+func (e *Envelope) IssuedAtTime() (time.Time, error) {
+	t, err := time.Parse(time.RFC3339Nano, e.IssuedAt)
+	if err != nil || !strings.HasSuffix(e.IssuedAt, "Z") {
+		return time.Time{}, fmt.Errorf("%w: issued_at must be an RFC 3339 UTC timestamp", ErrInvalid)
+	}
+	return t, nil
 }
 
 // New returns an unsigned envelope with a fresh identifier and the current
@@ -191,9 +207,13 @@ func (e *Envelope) Verify(pub ed25519.PublicKey) error {
 
 // VerifyWith looks up the issuer's key with r and verifies the envelope.
 func (e *Envelope) VerifyWith(r KeyResolver) error {
-	pub, err := r.PublicKey(e.Issuer, e.Key)
+	at, err := e.IssuedAtTime()
 	if err != nil {
-		return fmt.Errorf("%w: key lookup for %q/%q: %v", ErrSignature, e.Issuer, e.Key, err)
+		return err
+	}
+	pub, err := r.PublicKey(e.Issuer, e.Key, at)
+	if err != nil {
+		return fmt.Errorf("%w: key lookup for %q/%q: %w", ErrSignature, e.Issuer, e.Key, err)
 	}
 	return e.Verify(pub)
 }
@@ -201,6 +221,8 @@ func (e *Envelope) VerifyWith(r KeyResolver) error {
 var (
 	uuidV7Pattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 	typePattern   = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*/[1-9][0-9]*$`)
+
+	instanceIDPattern = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 )
 
 func (e *Envelope) validateFields() error {
@@ -216,8 +238,8 @@ func (e *Envelope) validateFields() error {
 	if !typePattern.MatchString(e.Type) {
 		return invalid("type must look like name/1, got %q", e.Type)
 	}
-	if !validName(e.Issuer, 256) {
-		return invalid("issuer must be 1 to 256 characters without spaces or control characters")
+	if !ValidInstanceID(e.Issuer) {
+		return invalid("issuer must be an instance identifier (a lowercase domain name), got %q", e.Issuer)
 	}
 	if !validName(e.Key, 64) {
 		return invalid("key must be 1 to 64 characters without spaces or control characters")
@@ -225,11 +247,8 @@ func (e *Envelope) validateFields() error {
 	if !e.Layer.Valid() {
 		return invalid("layer must be commonwealth, region, state or locality, got %q", e.Layer)
 	}
-	if !strings.HasSuffix(e.IssuedAt, "Z") {
-		return invalid("issued_at must be in UTC and end in Z")
-	}
-	if _, err := time.Parse(time.RFC3339Nano, e.IssuedAt); err != nil {
-		return invalid("issued_at must be an RFC 3339 timestamp: %v", err)
+	if _, err := e.IssuedAtTime(); err != nil {
+		return err
 	}
 	if e.Supersedes != "" && !uuidV7Pattern.MatchString(e.Supersedes) {
 		return invalid("supersedes must be a lowercase UUID version 7")

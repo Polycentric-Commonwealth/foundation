@@ -120,7 +120,7 @@ func TestUnsignedAndMalformedSignatures(t *testing.T) {
 
 type mapResolver map[string]ed25519.PublicKey
 
-func (m mapResolver) PublicKey(issuer, key string) (ed25519.PublicKey, error) {
+func (m mapResolver) PublicKey(issuer, key string, _ time.Time) (ed25519.PublicKey, error) {
 	pub, ok := m[issuer+"/"+key]
 	if !ok {
 		return nil, errors.New("unknown key")
@@ -148,6 +148,9 @@ func TestNewRejectsInvalidFields(t *testing.T) {
 	}{
 		{"empty issuer", "", "k", "state", "t/1", ok},
 		{"issuer with space", "a b", "k", "state", "t/1", ok},
+		{"issuer without dot", "state", "k", "state", "t/1", ok},
+		{"issuer with uppercase", "State.example", "k", "state", "t/1", ok},
+		{"issuer with leading hyphen", "-state.example", "k", "state", "t/1", ok},
 		{"empty key", "i", "", "state", "t/1", ok},
 		{"unknown layer", "i", "k", "planet", "t/1", ok},
 		{"type without version", "i", "k", "state", "count", ok},

@@ -10,7 +10,7 @@ The Commonwealth protocol: everything a platform must implement to interoperate 
 | --- | --- | --- |
 | [Signed record format](record-format.md) | The envelope for every record that crosses layers | Draft 0.1, implemented in [`record/`](../record/) |
 | [Integration protocol](integration-protocol.md) | Message types, transport, events and versioning between instances | Skeleton |
-| Instance registry | How instances publish their identity, layer, keys and endpoints | Not started |
+| [Instance registry](instance-registry.md) | How instances publish their identity, layer, keys and endpoints, and how verifiers decide which keys to trust | Draft 0.1, implemented in [`registry/`](../registry/) |
 | Federated identity | State-issued identifiers and privacy-preserving credentials | Not started |
 | Public ledger | The append-only log of official acts and how it is replicated | Not started |
 | [Data schemas](schemas/) | Common formats for laws, budgets, statistics, payments and counts | Skeleton |
