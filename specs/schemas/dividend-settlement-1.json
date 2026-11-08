@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/dividend-settlement-1.json",
+  "title": "dividend-settlement/1",
+  "description": "The Commonwealth's instruction to a State: the per-person dividend and total for one period. total must equal per_person times recipients.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["period", "basis", "unit", "per_person", "recipients", "total"],
+  "properties": {
+    "period": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$" },
+    "basis": {
+      "description": "id of the eligibility-count/1 record this settlement is based on.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "unit": { "description": "Unit of account, three uppercase letters.", "type": "string", "pattern": "^[A-Z]{3}$" },
+    "per_person": { "$ref": "#/$defs/amount" },
+    "recipients": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "total": { "$ref": "#/$defs/amount" }
+  },
+  "$defs": {
+    "amount": {
+      "description": "Non-negative decimal amount: up to 18 digits before the point and 6 after, no sign, exponent or leading zeros. Compared by value.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17})(\\.[0-9]{1,6})?$"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/receipt-1.json",
+  "title": "receipt/1",
+  "description": "Signed acknowledgement of a record delivered to an instance's inbox.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record", "status"],
+  "properties": {
+    "record": {
+      "description": "id of the acknowledged record; empty if the body could not be parsed.",
+      "type": "string",
+      "pattern": "^$|^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "record_type": { "type": "string", "maxLength": 128 },
+    "status": { "enum": ["accepted", "duplicate", "rejected"] },
+    "reason": {
+      "enum": ["invalid", "not-addressed", "type-not-allowed", "untrusted", "future-dated", "refused"]
+    },
+    "detail": { "type": "string", "maxLength": 1000 }
+  },
+  "if": { "properties": { "status": { "const": "rejected" } } },
+  "then": { "required": ["reason"] },
+  "else": { "not": { "required": ["reason"] } }
+}

@@ -9,11 +9,11 @@ The Commonwealth protocol: everything a platform must implement to interoperate 
 | Specification | Defines | Status |
 | --- | --- | --- |
 | [Signed record format](record-format.md) | The envelope for every record that crosses layers | Draft 0.1, implemented in [`record/`](../record/) |
-| [Integration protocol](integration-protocol.md) | Message types, transport, events and versioning between instances | Skeleton |
+| [Integration protocol](integration-protocol.md) | Delivery to inboxes, signed receipts, message types and the dividend settlement flow | Draft 0.1, implemented in [`protocol/`](../protocol/) and [`dividend/`](../dividend/) |
 | [Instance registry](instance-registry.md) | How instances publish their identity, layer, keys and endpoints, and how verifiers decide which keys to trust | Draft 0.1, implemented in [`registry/`](../registry/) |
 | Federated identity | State-issued identifiers and privacy-preserving credentials | Not started |
 | Public ledger | The append-only log of official acts and how it is replicated | Not started |
-| [Data schemas](schemas/) | Common formats for laws, budgets, statistics, payments and counts | Skeleton |
+| [Data schemas](schemas/) | Common formats for laws, budgets, statistics, payments and counts | Receipt and dividend schemas drafted |
 | Conformance suite | Tests that prove an implementation follows the above | Not started |
 
 ## Standards we build on
@@ -25,14 +25,12 @@ Adopted ([decision 0005](../decisions/0005-record-format-choices.md)):
 - **JSON Canonicalization Scheme (RFC 8785)** for the bytes that are signed.
 - **Ed25519 (RFC 8032)** signatures.
 - **UUID version 7 (RFC 9562)** record identifiers.
+- **HTTPS** for delivery, and **JSON Schema** (draft 2020-12) for payloads ([decision 0007](../decisions/0007-integration-transport-and-receipts.md)).
 
 Candidates under consideration:
 
-- **HTTP and JSON** for transport.
 - **OpenAPI** to describe interfaces.
-- **JSON Schema** to define and validate data.
 - **W3C Verifiable Credentials** for privacy-preserving eligibility proofs.
-- **CloudEvents** for event messages.
 
 Each choice is confirmed in the specification that uses it and recorded as a decision.
 

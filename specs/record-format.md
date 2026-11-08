@@ -24,7 +24,8 @@ The reference implementation is the Go package [`record`](../record/). Design ch
   "key": "2026-1",
   "layer": "state",
   "issued_at": "2026-11-08T04:30:00Z",
-  "payload": { "eligible_adults": 4120533, "residents": 5302114 },
+  "to": "commonwealth.example",
+  "payload": { "period": "2027-01", "residents": 5302114, "adults": 4120533, "dividend_recipients": 5302114 },
   "signature": "…"
 }
 ```
@@ -42,6 +43,7 @@ All fields are required unless marked optional. An envelope with any other top-l
 | `key` | Non-empty string, at most 64 characters, without spaces or control characters | Identifier of the issuer's signing key, as published in its [instance description](instance-registry.md#instance-description) |
 | `layer` | One of `commonwealth`, `region`, `state`, `locality` | Issuer's layer |
 | `issued_at` | RFC 3339 timestamp in UTC, ending in `Z` | Time of issue |
+| `to` | An instance identifier, other than `issuer` (optional) | Recipient, for records sent to one instance under the [integration protocol](integration-protocol.md). Omitted for records published to everyone, such as instance descriptions |
 | `supersedes` | UUID version 7 (optional) | `id` of an earlier record this one replaces |
 | `payload` | JSON object | The record content, valid against the schema named by `type` |
 | `signature` | Unpadded base64url | Ed25519 signature, as described below |

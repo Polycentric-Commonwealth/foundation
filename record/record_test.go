@@ -87,6 +87,7 @@ func TestTamperingIsDetected(t *testing.T) {
 		"type":       func(e *Envelope) { e.Type = "eligibility-count/2" },
 		"issued_at":  func(e *Envelope) { e.IssuedAt = "2030-01-01T00:00:00Z" },
 		"supersedes": func(e *Envelope) { e.Supersedes = e.ID },
+		"to":         func(e *Envelope) { e.To = "commonwealth.example" },
 	}
 	for field, change := range tamper {
 		t.Run(field, func(t *testing.T) {
@@ -96,6 +97,32 @@ func TestTamperingIsDetected(t *testing.T) {
 				t.Errorf("Verify after changing %s = %v, want ErrSignature", field, err)
 			}
 		})
+	}
+}
+
+func TestRecipient(t *testing.T) {
+	pub, priv := newKey(t)
+	e := signed(t, priv)
+	e.To = "commonwealth.example"
+	if err := e.Sign(priv); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := e.Marshal()
+	p, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.To != "commonwealth.example" {
+		t.Errorf("To = %q after round trip", p.To)
+	}
+	if err := p.Verify(pub); err != nil {
+		t.Errorf("Verify: %v", err)
+	}
+	for _, to := range []string{"state.example", "Not An Instance"} {
+		e.To = to
+		if err := e.Sign(priv); !errors.Is(err, ErrInvalid) {
+			t.Errorf("Sign with to=%q: got %v, want ErrInvalid", to, err)
+		}
 	}
 }
 

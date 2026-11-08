@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/dividend-confirmation-1.json",
+  "title": "dividend-confirmation/1",
+  "description": "A State's aggregate confirmation that it paid a dividend settlement. Totals only: no individual payments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["settlement", "unit", "paid_recipients", "paid_total"],
+  "properties": {
+    "settlement": {
+      "description": "id of the dividend-settlement/1 record being confirmed.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "unit": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "paid_recipients": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "paid_total": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17})(\\.[0-9]{1,6})?$"
+    }
+  }
+}

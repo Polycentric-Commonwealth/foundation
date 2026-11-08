@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/eligibility-count-1.json",
+  "title": "eligibility-count/1",
+  "description": "A State's counts for one period. Counts only: no names or other personal data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["period", "residents", "adults", "dividend_recipients"],
+  "properties": {
+    "period": { "$ref": "#/$defs/period" },
+    "residents": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "adults": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "dividend_recipients": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+  },
+  "$defs": {
+    "period": {
+      "description": "Calendar month, YYYY-MM.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+    }
+  }
+}

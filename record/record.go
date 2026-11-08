@@ -64,6 +64,7 @@ type Envelope struct {
 	Key        string          `json:"key"`
 	Layer      Layer           `json:"layer"`
 	IssuedAt   string          `json:"issued_at"`
+	To         string          `json:"to,omitempty"`
 	Supersedes string          `json:"supersedes,omitempty"`
 	Payload    json.RawMessage `json:"payload"`
 	Signature  string          `json:"signature,omitempty"`
@@ -249,6 +250,9 @@ func (e *Envelope) validateFields() error {
 	}
 	if _, err := e.IssuedAtTime(); err != nil {
 		return err
+	}
+	if e.To != "" && (!ValidInstanceID(e.To) || e.To == e.Issuer) {
+		return invalid("to must be another instance's identifier, got %q", e.To)
 	}
 	if e.Supersedes != "" && !uuidV7Pattern.MatchString(e.Supersedes) {
 		return invalid("supersedes must be a lowercase UUID version 7")

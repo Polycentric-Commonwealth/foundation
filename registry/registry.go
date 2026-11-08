@@ -240,7 +240,8 @@ func (r *Registry) Verify(env *record.Envelope) error {
 	return env.VerifyWith(r)
 }
 
-// Description returns the latest known description of an instance.
+// Description returns a copy of the latest known description of an
+// instance. Changing the copy does not affect the registry.
 func (r *Registry) Description(id string) (*Description, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -248,5 +249,11 @@ func (r *Registry) Description(id string) (*Description, bool) {
 	if e == nil || e.desc == nil {
 		return nil, false
 	}
-	return e.desc, true
+	d := *e.desc
+	d.Keys = append([]Key(nil), e.desc.Keys...)
+	d.Endpoints = make(map[string]string, len(e.desc.Endpoints))
+	for k, v := range e.desc.Endpoints {
+		d.Endpoints[k] = v
+	}
+	return &d, true
 }
