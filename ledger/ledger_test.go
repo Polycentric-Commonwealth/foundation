@@ -473,3 +473,55 @@ func TestLogRefusesOthersRecords(t *testing.T) {
 		t.Errorf("appending a checkpoint: %v", err)
 	}
 }
+
+// persistentStorage keeps checkpoints and cosignatures, as a database would.
+type persistentStorage struct {
+	ledger.MemoryStorage
+	stored []ledger.StoredCheckpoint
+}
+
+func (p *persistentStorage) SaveCheckpoint(env *record.Envelope) error {
+	p.stored = append(p.stored, ledger.StoredCheckpoint{Checkpoint: env})
+	return nil
+}
+
+func (p *persistentStorage) SaveCosignature(id string, cos *record.Envelope) error {
+	for i := range p.stored {
+		if p.stored[i].Checkpoint.ID == id {
+			p.stored[i].Cosignatures = append(p.stored[i].Cosignatures, cos)
+			return nil
+		}
+	}
+	return errors.New("no such checkpoint")
+}
+
+func (p *persistentStorage) Checkpoints() ([]ledger.StoredCheckpoint, error) { return p.stored, nil }
+
+func TestCheckpointsSurviveRestart(t *testing.T) {
+	net := start(t)
+	st := net.Nodes[stID]
+	storage := &persistentStorage{}
+	st.Log = ledger.NewLog(st.Identity, storage)
+	env, idx := logRecord(t, st, 1, nil)
+	if n := publish(t, net, st); n != 3 {
+		t.Fatalf("collected %d cosignatures", n)
+	}
+
+	reopened, err := ledger.OpenLog(st.Identity, storage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ev, err := reopened.Evidence(idx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ev.Cosignatures) != 3 {
+		t.Errorf("reopened evidence has %d cosignatures, want 3", len(ev.Cosignatures))
+	}
+	if err := ledger.VerifyRecord(net.Nodes[w1ID].Registry, env, ev, policy); err != nil {
+		t.Errorf("VerifyRecord after restart: %v", err)
+	}
+	if _, _, ok := reopened.Latest(); !ok {
+		t.Error("no latest checkpoint after restart")
+	}
+}

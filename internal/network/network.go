@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -42,6 +43,12 @@ type Node struct {
 
 	// Extra, if set, serves every path the node does not handle itself.
 	Extra http.Handler
+
+	// Signed is the node's signed description and Attestations the
+	// attestations its parent issued for it, as served at the well-known
+	// paths.
+	Signed       *record.Envelope
+	Attestations []*record.Envelope
 }
 
 // Network is a set of running instances.
@@ -96,6 +103,15 @@ func Start(specs ...Spec) (*Network, error) {
 		mux.Handle("/ledger/", http.StripPrefix("/ledger", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			node.Log.Handler().ServeHTTP(w, r)
 		})))
+		mux.HandleFunc("GET "+registry.WellKnownPath, func(w http.ResponseWriter, r *http.Request) {
+			data, _ := node.Signed.Marshal()
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(data)
+		})
+		mux.HandleFunc("GET "+registry.AttestationsPath, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(append([]*record.Envelope{}, node.Attestations...))
+		})
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			if node.Extra == nil {
 				http.NotFound(w, r)
@@ -120,6 +136,7 @@ func Start(specs ...Spec) (*Network, error) {
 			return nil, fmt.Errorf("%s: %w", s.Instance, err)
 		}
 		descriptions = append(descriptions, d)
+		node.Signed = d
 
 		if s.Layer == record.Commonwealth {
 			if anchor != nil {
@@ -139,6 +156,7 @@ func Start(specs ...Spec) (*Network, error) {
 			return nil, err
 		}
 		attestations = append(attestations, a)
+		node.Attestations = append(node.Attestations, a)
 	}
 	if anchor == nil {
 		return nil, fmt.Errorf("network: no commonwealth instance")
@@ -223,7 +241,8 @@ func (n *Network) RevokeAndReplace(instance string, revokedAt time.Time) error {
 			return fmt.Errorf("%s: %w", other.Identity.Instance, err)
 		}
 	}
-	node.Description = &desc
+	node.Description, node.Signed = &desc, d
+	node.Attestations = append(node.Attestations, att)
 	node.Identity.KeyID, node.Identity.Key = newID, priv
 	node.Receiver.Self, node.Sender.Self, node.Witness.Self = node.Identity, node.Identity, node.Identity
 	node.Log.Self = node.Identity

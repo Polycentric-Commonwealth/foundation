@@ -6,6 +6,11 @@
 //	pcrecord keygen NAME
 //	pcrecord sign -priv NAME.key -issuer ID -key KEYID -layer LAYER -type TYPE [-supersedes ID] PAYLOAD.json
 //	pcrecord verify -pub NAME.pub ENVELOPE.json
+//	pcrecord attest -priv NAME.key -issuer ID -key KEYID -layer LAYER DESCRIPTION.json
+//
+// The attest command is for a parent instance: it reads a child's signed
+// instance description and prints an attestation of every key the child
+// lists, for the child to publish (specs/instance-registry.md).
 //
 // Use "-" in place of a JSON file name to read from standard input. Keys
 // are stored as unpadded base64url text: the 32-byte seed in NAME.key and
@@ -27,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/polycentric-commonwealth/foundation/record"
+	"github.com/polycentric-commonwealth/foundation/registry"
 )
 
 func main() {
@@ -41,6 +47,8 @@ func main() {
 		err = sign(os.Args[2:])
 	case "verify":
 		err = verify(os.Args[2:])
+	case "attest":
+		err = attest(os.Args[2:])
 	default:
 		usage()
 	}
@@ -55,6 +63,7 @@ func usage() {
   pcrecord keygen NAME
   pcrecord sign -priv NAME.key -issuer ID -key KEYID -layer LAYER -type TYPE [-supersedes ID] PAYLOAD.json
   pcrecord verify -pub NAME.pub ENVELOPE.json
+  pcrecord attest -priv NAME.key -issuer ID -key KEYID -layer LAYER DESCRIPTION.json
 `)
 	os.Exit(2)
 }
@@ -141,6 +150,66 @@ func verify(args []string) error {
 	}
 	fmt.Printf("valid: %s %s issued by %s (%s) at %s\n", e.Type, e.ID, e.Issuer, e.Layer, e.IssuedAt)
 	return nil
+}
+
+func attest(args []string) error {
+	fs := flag.NewFlagSet("attest", flag.ExitOnError)
+	privPath := fs.String("priv", "", "the parent's private key file written by keygen")
+	issuer := fs.String("issuer", "", "the parent's instance identifier")
+	keyID := fs.String("key", "", "the parent's signing key identifier")
+	layer := fs.String("layer", "", "the parent's layer")
+	fs.Parse(args)
+	if fs.NArg() != 1 || *privPath == "" {
+		usage()
+	}
+	seed, err := readKey(*privPath, ed25519.SeedSize)
+	if err != nil {
+		return err
+	}
+	data, err := readInput(fs.Arg(0))
+	if err != nil {
+		return err
+	}
+	env, err := record.Parse(data)
+	if err != nil {
+		return err
+	}
+	d, err := registry.ParseDescription(env)
+	if err != nil {
+		return err
+	}
+	if d.Parent != *issuer {
+		return fmt.Errorf("%s names %q as its parent, not %s", d.Instance, d.Parent, *issuer)
+	}
+	priv := ed25519.NewKeyFromSeed(seed)
+	k, ok := d.Key(env.Key)
+	if !ok {
+		return fmt.Errorf("description is signed with key %q, which it does not list", env.Key)
+	}
+	pub, err := registry.DecodePublicKey(k.PublicKey)
+	if err == nil {
+		err = env.Verify(pub)
+	}
+	if err != nil {
+		return fmt.Errorf("description is not signed by one of its own keys: %w", err)
+	}
+	a := &registry.Attestation{Subject: d.Instance, SubjectLayer: d.Layer}
+	for _, k := range d.Keys {
+		if k.RevokedAt == "" {
+			a.Keys = append(a.Keys, registry.AttestedKey{ID: k.ID, PublicKey: k.PublicKey})
+		}
+	}
+	out, err := registry.NewAttestation(*issuer, record.Layer(*layer), *keyID, priv, a)
+	if err != nil {
+		return err
+	}
+	b, err := out.Marshal()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "attested %d key(s) of %s; check them with the child out of band before publishing\n", len(a.Keys), d.Instance)
+	_, err = os.Stdout.Write(b)
+	return err
 }
 
 func readKey(path string, size int) ([]byte, error) {

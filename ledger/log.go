@@ -41,6 +41,27 @@ type Storage interface {
 	LeafHashes(n uint64) ([]Hash, error)
 }
 
+// CheckpointStorage is optionally implemented by a Storage that also keeps
+// the log's signed checkpoints and their cosignatures, so they survive a
+// restart. Use OpenLog to load them.
+type CheckpointStorage interface {
+	// SaveCheckpoint stores a signed checkpoint.
+	SaveCheckpoint(env *record.Envelope) error
+	// SaveCosignature stores a witness's cosignature of a stored
+	// checkpoint, replacing any earlier one from the same witness.
+	SaveCosignature(checkpoint string, cos *record.Envelope) error
+	// Checkpoints returns every stored checkpoint, oldest first, each with
+	// its cosignatures.
+	Checkpoints() ([]StoredCheckpoint, error)
+}
+
+// StoredCheckpoint is a checkpoint and its cosignatures, as kept by a
+// CheckpointStorage.
+type StoredCheckpoint struct {
+	Checkpoint   *record.Envelope
+	Cosignatures []*record.Envelope
+}
+
 // MemoryStorage is Storage kept in memory, for tests and demonstrations.
 type MemoryStorage struct {
 	mu      sync.RWMutex
@@ -179,6 +200,32 @@ var notLoggable = map[string]bool{
 	"uniqueness-conflict/1":           true,
 }
 
+// OpenLog returns a log for the instance self and, if storage is a
+// CheckpointStorage, loads the checkpoints and cosignatures it holds.
+func OpenLog(self protocol.Identity, storage Storage) (*Log, error) {
+	l := NewLog(self, storage)
+	cs, ok := storage.(CheckpointStorage)
+	if !ok {
+		return l, nil
+	}
+	stored, err := cs.Checkpoints()
+	if err != nil {
+		return nil, err
+	}
+	for _, st := range stored {
+		var cp Checkpoint
+		if err := decodeStrict(st.Checkpoint, CheckpointType, &cp); err != nil {
+			return nil, err
+		}
+		sc := &signedCheckpoint{env: st.Checkpoint, cp: cp, cosignatures: map[string]*record.Envelope{}}
+		for _, c := range st.Cosignatures {
+			sc.cosignatures[c.Issuer] = c
+		}
+		l.checkpoints = append(l.checkpoints, sc)
+	}
+	return l, nil
+}
+
 // Append adds a record issued by this instance and signed with its current
 // key, and returns its index.
 func (l *Log) Append(env *record.Envelope) (uint64, error) {
@@ -223,6 +270,11 @@ func (l *Log) Checkpoint() (*record.Envelope, error) {
 	if err := env.Sign(l.Self.Key); err != nil {
 		return nil, err
 	}
+	if cs, ok := l.Storage.(CheckpointStorage); ok {
+		if err := cs.SaveCheckpoint(env); err != nil {
+			return nil, err
+		}
+	}
 	l.checkpoints = append(l.checkpoints, &signedCheckpoint{env: env, cp: cp, cosignatures: map[string]*record.Envelope{}})
 	return env, nil
 }
@@ -241,6 +293,11 @@ func (l *Log) AddCosignature(cos *record.Envelope) error {
 		if sc.env.ID == c.Checkpoint {
 			if c.Origin != l.Self.Instance || c.Size != sc.cp.Size || c.Root != sc.cp.Root {
 				return invalid("cosignature does not match checkpoint %s", c.Checkpoint)
+			}
+			if cs, ok := l.Storage.(CheckpointStorage); ok {
+				if err := cs.SaveCosignature(sc.env.ID, cos); err != nil {
+					return err
+				}
 			}
 			sc.cosignatures[cos.Issuer] = cos
 			return nil
