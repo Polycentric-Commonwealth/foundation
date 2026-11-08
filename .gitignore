@@ -1,0 +1,6 @@
+# Built binaries
+/pcrecord
+*.exe
+
+# Private keys created while trying the tools
+*.key

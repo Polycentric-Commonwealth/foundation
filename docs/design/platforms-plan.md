@@ -210,7 +210,7 @@ Build in the order the transition needs, and start with pieces today's governmen
 
 ### Build stages
 
-1. **Stage A: Foundation.** Write version 0.1 of the record format, schemas, instance registry and integration protocol on top of the chosen standards. Pick one technology stack. Build a thin reference implementation of the core library and one end-to-end flow, starting with dividend settlement from Commonwealth to State, which exercises identity, signatures, the ledger and cross-layer messaging at once. Add the first conformance tests.
+1. **Stage A: Foundation.** Write version 0.1 of the record format, schemas, instance registry and integration protocol on top of the chosen standards, using the stack in [decision 0004](../../decisions/0004-technology-stack.md). Build a thin reference implementation of the core library and one end-to-end flow, starting with dividend settlement from Commonwealth to State, which exercises identity, signatures, the ledger and cross-layer messaging at once. Add the first conformance tests.
 2. **Stage B: Useful today.** Ship standalone modules any existing government or community can adopt now: Locality council workspace, participatory budgeting and citizens' assembly tools; State ownership register and officials' transparency. These need no Commonwealth to be valuable.
 3. **Stage C: Phase 0 pilot.** Build the minimum Commonwealth and State pieces for the founding coalition: charter registry, sortition engine for the global citizens' assembly, pilot Commons Fund, dividend settlement and State payment integration, public ledger.
 4. **Stage D: Phase 1 economic union.** Add rent and carbon-fee reporting, tax and rent collection, statistics hub and audit workspace.
@@ -227,7 +227,6 @@ Build in the order the transition needs, and start with pieces today's governmen
 
 ### Open questions
 
-- Which technology stack should the reference platforms and core library use?
 - What public ledger design fits: a replicated signed log, or something heavier?
 - Which privacy-preserving credential approach is mature enough for eligibility checks?
 - Who funds and hosts the foundation before any Commonwealth institution exists?

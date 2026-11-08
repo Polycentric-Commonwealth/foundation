@@ -2,13 +2,13 @@
 
 The Commonwealth protocol: everything a platform must implement to interoperate with others. Any implementation, in any language, that follows these specifications and passes the conformance suite is a valid platform ([decision 0002](../decisions/0002-protocols-over-platforms.md)).
 
-**Status:** skeletons. Version 0.1 is the goal of build Stage A. Nothing here is stable yet.
+**Status:** early drafts. Version 0.1 of each is the goal of build Stage A. Nothing here is stable yet.
 
 ## Specifications
 
 | Specification | Defines | Status |
 | --- | --- | --- |
-| [Signed record format](record-format.md) | The envelope for every record that crosses layers | Skeleton |
+| [Signed record format](record-format.md) | The envelope for every record that crosses layers | Draft 0.1, implemented in [`record/`](../record/) |
 | [Integration protocol](integration-protocol.md) | Message types, transport, events and versioning between instances | Skeleton |
 | Instance registry | How instances publish their identity, layer, keys and endpoints | Not started |
 | Federated identity | State-issued identifiers and privacy-preserving credentials | Not started |
@@ -18,12 +18,19 @@ The Commonwealth protocol: everything a platform must implement to interoperate 
 
 ## Standards we build on
 
-Specifications reference widely adopted open standards rather than products ([decision 0003](../decisions/0003-standards-based-core-with-adapters.md)). Candidates under consideration:
+Specifications reference widely adopted open standards rather than products ([decision 0003](../decisions/0003-standards-based-core-with-adapters.md)).
 
-- **HTTP and JSON** for transport and data.
+Adopted ([decision 0005](../decisions/0005-record-format-choices.md)):
+
+- **JSON Canonicalization Scheme (RFC 8785)** for the bytes that are signed.
+- **Ed25519 (RFC 8032)** signatures.
+- **UUID version 7 (RFC 9562)** record identifiers.
+
+Candidates under consideration:
+
+- **HTTP and JSON** for transport.
 - **OpenAPI** to describe interfaces.
 - **JSON Schema** to define and validate data.
-- **Ed25519** signatures for records and messages.
 - **W3C Verifiable Credentials** for privacy-preserving eligibility proofs.
 - **CloudEvents** for event messages.
 
