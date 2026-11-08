@@ -39,6 +39,9 @@ type Node struct {
 	Log         *ledger.Log
 	Witness     *ledger.Witness
 	Server      *httptest.Server
+
+	// Extra, if set, serves every path the node does not handle itself.
+	Extra http.Handler
 }
 
 // Network is a set of running instances.
@@ -93,6 +96,13 @@ func Start(specs ...Spec) (*Network, error) {
 		mux.Handle("/ledger/", http.StripPrefix("/ledger", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			node.Log.Handler().ServeHTTP(w, r)
 		})))
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if node.Extra == nil {
+				http.NotFound(w, r)
+				return
+			}
+			node.Extra.ServeHTTP(w, r)
+		})
 		node.Server = httptest.NewTLSServer(mux)
 		net.Nodes[s.Instance] = node
 		pool.AddCert(node.Server.Certificate())

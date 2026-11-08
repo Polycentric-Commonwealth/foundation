@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/uniqueness-evaluation-1.json",
+  "title": "uniqueness-evaluation/1",
+  "description": "An operator's partial evaluation of a request, with a batched RFC 9497 DLEQ proof against its public share. Never logged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request",
+    "epoch",
+    "index",
+    "elements",
+    "proof"
+  ],
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/id"
+    },
+    "epoch": {
+      "$ref": "#/$defs/epoch"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "proof": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "element": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    }
+  }
+}

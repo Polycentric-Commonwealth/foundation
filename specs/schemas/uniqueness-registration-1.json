@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/uniqueness-registration-1.json",
+  "title": "uniqueness-registration/1",
+  "description": "Tokens a State adds for people it counts and removes for people it no longer counts. Tokens are unique across both lists. Never logged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "epoch",
+    "add",
+    "remove"
+  ],
+  "properties": {
+    "epoch": {
+      "$ref": "#/$defs/epoch"
+    },
+    "add": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/token"
+      }
+    },
+    "remove": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/token"
+      }
+    }
+  },
+  "$defs": {
+    "epoch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    }
+  }
+}

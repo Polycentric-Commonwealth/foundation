@@ -15,6 +15,13 @@ Schemas describe the payload only. The rules that span several records, such as 
 | [`audit-request-1.json`](audit-request-1.json) | Audit Office's request to open a sample |
 | [`audit-response-1.json`](audit-response-1.json) | State's openings of the sample (the only schema with personal data) |
 | [`audit-finding-1.json`](audit-finding-1.json) | Audit result and repayment |
+| [`uniqueness-config-1.json`](uniqueness-config-1.json) | The Commonwealth's uniqueness configuration: key commitments and operators |
+| [`uniqueness-evaluation-request-1.json`](uniqueness-evaluation-request-1.json) | State's blinded elements for an operator |
+| [`uniqueness-evaluation-1.json`](uniqueness-evaluation-1.json) | Operator's partial evaluation and proof |
+| [`uniqueness-registration-1.json`](uniqueness-registration-1.json) | State's token additions and removals |
+| [`uniqueness-conflict-1.json`](uniqueness-conflict-1.json) | Token held by more than one State |
+| [`resident-credential-1.json`](resident-credential-1.json) | State-issued credential carried by its holder |
+| [`credential-status-list-1.json`](credential-status-list-1.json) | State's revocation list for credentials |
 
 Instance descriptions and attestations are defined in prose in the [instance registry](../instance-registry.md) specification; schemas for them will follow.
 
@@ -30,6 +37,7 @@ Instance descriptions and attestations are defined in prose in the [instance reg
 | --- | --- |
 | Rent report | State to Commonwealth reporting |
 | Sortition seed and result | Citizens' Chamber selection |
+| Presentation | A holder's answer to a credential challenge (defined in prose for now) |
 | Law and amendment | Charter and law registries at every layer |
 | Budget and spending | Public portals and audits |
 | Core metric | Statistics hub and outcome-pay indicators |

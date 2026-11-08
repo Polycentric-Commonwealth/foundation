@@ -13,6 +13,7 @@ The Polycentric Commonwealth is an open design for layered, accountable self-gov
 | [`protocol/`](protocol/), [`amount/`](amount/), [`dividend/`](dividend/) | Sending records between instances with signed receipts, exact decimal amounts, and the dividend settlement flow |
 | [`ledger/`](ledger/) | The public ledger: append-only logs, checkpoints, witness cosigning and evidence |
 | [`audit/`](audit/) | Eligibility audits: committed recipient lists, random sampling, checks and findings |
+| [`uniqueness/`](uniqueness/), [`credential/`](credential/) | Federated identity: threshold-OPRF tokens that catch a person counted twice, and credentials people present without revealing who they are |
 | [`cmd/pcdemo/`](cmd/pcdemo/) | An end-to-end demonstration of dividend settlement between a Commonwealth and a State |
 | [`cmd/pcrecord/`](cmd/pcrecord/) | A command-line tool to create keys and sign and verify records |
 
@@ -26,7 +27,7 @@ The first platform, [`platform-state`](https://github.com/Polycentric-Commonweal
 
 ## Status
 
-Early design, in build Stage A. The [signed record format](specs/record-format.md), [instance registry](specs/instance-registry.md), [integration protocol](specs/integration-protocol.md), [public ledger](specs/public-ledger.md) and [eligibility audit](specs/eligibility-audit.md) are at draft 0.1 with working Go implementations, and the first flow, dividend settlement, runs end to end. The federated identity specification has not started. See the [platforms plan](docs/design/platforms-plan.md#10-build-roadmap-and-open-questions).
+Early design, in build Stage A. The [signed record format](specs/record-format.md), [instance registry](specs/instance-registry.md), [integration protocol](specs/integration-protocol.md), [public ledger](specs/public-ledger.md), [eligibility audit](specs/eligibility-audit.md) and [federated identity](specs/federated-identity.md) are at draft 0.1 with working Go implementations, and the first flow, dividend settlement, runs end to end. See the [platforms plan](docs/design/platforms-plan.md#10-build-roadmap-and-open-questions).
 
 ## Try it
 

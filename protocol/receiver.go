@@ -133,27 +133,12 @@ func (rv *Receiver) Receive(ctx context.Context, body []byte) (Receipt, *record.
 		return reject("", "", ReasonInvalid, err.Error()), nil
 	}
 	id, typ := env.ID, env.Type
-	if env.To != rv.Self.Instance {
-		return reject(id, typ, ReasonNotAddressed, fmt.Sprintf("record is addressed to %q", env.To)), env
-	}
-	if !Allowed(typ, env.Layer, rv.Self.Layer) {
-		return reject(id, typ, ReasonTypeNotAllowed, fmt.Sprintf("%s may not be sent from %s to %s", typ, env.Layer, rv.Self.Layer)), env
-	}
-	if desc, ok := rv.Registry.Description(env.Issuer); !ok || desc.Layer != env.Layer {
-		return reject(id, typ, ReasonUntrusted, "issuer is unknown or its layer does not match its description"), env
-	}
-	if err := rv.Registry.Verify(env); err != nil {
-		return reject(id, typ, ReasonUntrusted, err.Error()), env
-	}
 	now := time.Now
 	if rv.Now != nil {
 		now = rv.Now
 	}
-	if revoked, ok := rv.Registry.RevokedAt(env.Issuer, env.Key); ok && !now().Before(revoked) {
-		return reject(id, typ, ReasonUntrusted, "signing key has been revoked; sign with a current key"), env
-	}
-	if at, _ := env.IssuedAtTime(); at.After(now().Add(MaxClockSkew)) {
-		return reject(id, typ, ReasonFutureDated, "issued_at is in the future"), env
+	if reason, detail := Check(rv.Registry, rv.Self, env, now()); reason != "" {
+		return reject(id, typ, reason, detail), env
 	}
 
 	handle, ok := rv.Handlers[typ]
@@ -177,6 +162,33 @@ func (rv *Receiver) Receive(ctx context.Context, body []byte) (Receipt, *record.
 		return reject(id, typ, ReasonRefused, "storage unavailable; retry later"), env
 	}
 	return Receipt{Record: id, RecordType: typ, Status: StatusAccepted}, env
+}
+
+// Check runs the delivery checks that do not depend on the application
+// (steps 2 to 5 of Delivery in specs/integration-protocol.md) on a record
+// received by self at time now. It returns an empty reason if the record
+// passes, and otherwise a rejection reason and an explanation. Endpoints
+// other than the inbox that accept signed records use it too.
+func Check(reg *registry.Registry, self Identity, env *record.Envelope, now time.Time) (reason, detail string) {
+	if env.To != self.Instance {
+		return ReasonNotAddressed, fmt.Sprintf("record is addressed to %q", env.To)
+	}
+	if !Allowed(env.Type, env.Layer, self.Layer) {
+		return ReasonTypeNotAllowed, fmt.Sprintf("%s may not be sent from %s to %s", env.Type, env.Layer, self.Layer)
+	}
+	if desc, ok := reg.Description(env.Issuer); !ok || desc.Layer != env.Layer {
+		return ReasonUntrusted, "issuer is unknown or its layer does not match its description"
+	}
+	if err := reg.Verify(env); err != nil {
+		return ReasonUntrusted, err.Error()
+	}
+	if revoked, ok := reg.RevokedAt(env.Issuer, env.Key); ok && !now.Before(revoked) {
+		return ReasonUntrusted, "signing key has been revoked; sign with a current key"
+	}
+	if at, _ := env.IssuedAtTime(); at.After(now.Add(MaxClockSkew)) {
+		return ReasonFutureDated, "issued_at is in the future"
+	}
+	return "", ""
 }
 
 func reject(id, typ, reason, detail string) Receipt {

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/uniqueness-conflict-1.json",
+  "title": "uniqueness-conflict/1",
+  "description": "A token held by more than one State, sent to each of them. Never logged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "epoch",
+    "token",
+    "states"
+  ],
+  "properties": {
+    "epoch": {
+      "$ref": "#/$defs/epoch"
+    },
+    "token": {
+      "$ref": "#/$defs/token"
+    },
+    "states": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/instance"
+      }
+    }
+  },
+  "$defs": {
+    "epoch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "instance": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$",
+      "maxLength": 253
+    }
+  }
+}

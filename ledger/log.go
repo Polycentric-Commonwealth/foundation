@@ -165,9 +165,19 @@ func NewLog(self protocol.Identity, storage Storage) *Log {
 }
 
 // notLoggable lists record types that must never be logged: checkpoints and
-// cosignatures describe the log itself, and audit responses carry personal
-// data (specs/eligibility-audit.md).
-var notLoggable = map[string]bool{CheckpointType: true, CosignatureType: true, "audit-response/1": true}
+// cosignatures describe the log itself, audit responses carry personal data
+// (specs/eligibility-audit.md), and credentials, uniqueness tokens and
+// evaluations concern individual people (specs/federated-identity.md).
+var notLoggable = map[string]bool{
+	CheckpointType:                    true,
+	CosignatureType:                   true,
+	"audit-response/1":                true,
+	"resident-credential/1":           true,
+	"uniqueness-evaluation-request/1": true,
+	"uniqueness-evaluation/1":         true,
+	"uniqueness-registration/1":       true,
+	"uniqueness-conflict/1":           true,
+}
 
 // Append adds a record issued by this instance and signed with its current
 // key, and returns its index.
@@ -176,7 +186,7 @@ func (l *Log) Append(env *record.Envelope) (uint64, error) {
 		return 0, invalid("a log holds only records issued by %s, not %s", l.Self.Instance, env.Issuer)
 	}
 	if notLoggable[env.Type] {
-		return 0, invalid("%s records describe the log and are not logged", env.Type)
+		return 0, invalid("%s records are never logged", env.Type)
 	}
 	if env.Key != l.Self.KeyID {
 		return 0, invalid("record is signed with key %q, not the current key %q", env.Key, l.Self.KeyID)

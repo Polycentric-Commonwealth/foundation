@@ -9,7 +9,7 @@ The reference implementation is the Go package [`protocol`](../protocol/). The c
 ## Principles
 
 - **Optional for operation.** A platform keeps working when disconnected; senders retry until delivered.
-- **Least data.** Each message type carries only what the receiving layer's enumerated powers require. There is no message type for bulk personal data; the only type with any personal data, `audit-response/1`, carries a small random sample for auditing.
+- **Least data.** Each message type carries only what the receiving layer's enumerated powers require. There is no message type for bulk personal data; the only type with any personal data, `audit-response/1`, carries a small random sample for auditing. Uniqueness tokens are pseudonyms that reveal nothing without the operators' shared key.
 - **Signed end to end.** Every message is a signed record, verified against the [instance registry](instance-registry.md). TLS protects confidentiality, not identity.
 - **Versioned.** Message types carry a major version; recipients accept the current and previous major version.
 
@@ -53,6 +53,10 @@ Payload of a `receipt/1` record ([schema](schemas/receipt-1.json)):
 | `audit-request/1` | Commonwealth → State | Asks the State to open a random sample of a count's recipient list ([eligibility audit](eligibility-audit.md)) | [schema](schemas/audit-request-1.json) |
 | `audit-response/1` | State → Commonwealth | The sampled openings. **The only type carrying personal data**: at most 600 people, never logged | [schema](schemas/audit-response-1.json) |
 | `audit-finding/1` | Commonwealth → State | Totals of the audit and any repayment owed | [schema](schemas/audit-finding-1.json) |
+| `uniqueness-registration/1` | State → Commonwealth | Uniqueness tokens added and removed ([federated identity](federated-identity.md#registry)); never logged | [schema](schemas/uniqueness-registration-1.json) |
+| `uniqueness-conflict/1` | Commonwealth → State | A token held by more than one State; never logged | [schema](schemas/uniqueness-conflict-1.json) |
+
+`uniqueness-evaluation-request/1` (State → Commonwealth or Region) is sent to an operator's evaluation endpoint rather than its inbox, with the same checks, and answered with `uniqueness-evaluation/1` ([federated identity](federated-identity.md#evaluation)).
 
 Planned: `rent-report/1` (State → Commonwealth) and `sortition-seed/1` (Commonwealth → State).
 

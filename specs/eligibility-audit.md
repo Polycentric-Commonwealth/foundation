@@ -110,7 +110,7 @@ The repayment is charged to the State government's share of commons rents. It is
 ## Limits
 
 - Sampling estimates the share of entries that are not real residents. It catches people who do not exist, have died or have moved away.
-- It does not reliably catch one real person counted twice, unless both entries are sampled. Uniqueness within and across States needs the federated identity specification.
+- It does not reliably catch one real person counted twice, unless both entries are sampled. Uniqueness within and across States comes from the tokens of the [federated identity](federated-identity.md#uniqueness) specification.
 - Inflation of a fraction of a percent may go undetected in one audit, but remains unprofitable on average because of the multiplier.
 
 ## Still to decide
@@ -119,3 +119,4 @@ The repayment is charged to the State government's share of commons rents. It is
 - [ ] How the State contests a finding before the Charter Court.
 - [ ] Audit frequency: every count, or a random share of counts.
 - [ ] Secure transport for the response beyond TLS, such as encrypting it to the Audit Office's key.
+- [ ] Uniqueness tokens in each opening, so the Audit Office can check that sampled people are registered ([federated identity](federated-identity.md#links-to-audits)).

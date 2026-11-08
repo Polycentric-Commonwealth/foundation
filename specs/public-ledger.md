@@ -25,7 +25,7 @@ An instance MUST log:
 - every instance description and attestation it issues, and
 - every record it sends under the [integration protocol](integration-protocol.md).
 
-It MAY log receipts. It MUST NOT log anything containing personal data. The only such record type is `audit-response/1`, which is therefore exempt from the rule above. It MUST NOT log checkpoints or cosignatures, which describe the log itself.
+It MAY log receipts. It MUST NOT log anything containing personal data. The only such record type is `audit-response/1`, which is therefore exempt from the rule above. It MUST NOT log credentials or any uniqueness record other than the configuration: `resident-credential/1`, `uniqueness-evaluation-request/1`, `uniqueness-evaluation/1`, `uniqueness-registration/1` and `uniqueness-conflict/1` concern individual people ([federated identity](federated-identity.md)). It MUST NOT log checkpoints or cosignatures, which describe the log itself.
 
 Entries are never removed or changed.
 

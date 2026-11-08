@@ -37,6 +37,12 @@ var MessageTypes = map[string][]Route{
 	"audit-request/1":         {{record.Commonwealth, record.State}},
 	"audit-response/1":        {{record.State, record.Commonwealth}},
 	"audit-finding/1":         {{record.Commonwealth, record.State}},
+
+	// Uniqueness (specs/federated-identity.md). Evaluation requests go to an
+	// operator's evaluation endpoint rather than its inbox.
+	"uniqueness-evaluation-request/1": {{record.State, record.Commonwealth}, {record.State, record.Region}},
+	"uniqueness-registration/1":       {{record.State, record.Commonwealth}},
+	"uniqueness-conflict/1":           {{record.Commonwealth, record.State}},
 }
 
 // Allowed reports whether a message of type typ may be sent from layer from
