@@ -240,6 +240,31 @@ func (r *Registry) Verify(env *record.Envelope) error {
 	return env.VerifyWith(r)
 }
 
+// Key returns an instance's key as listed in its latest known description,
+// whether or not it is trusted.
+func (r *Registry) Key(issuer, keyID string) (Key, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	e := r.entries[issuer]
+	if e == nil || e.desc == nil {
+		return Key{}, false
+	}
+	return e.desc.Key(keyID)
+}
+
+// RevokedAt returns the time an instance's key was revoked, if it has been.
+func (r *Registry) RevokedAt(issuer, keyID string) (time.Time, bool) {
+	k, ok := r.Key(issuer, keyID)
+	if !ok || k.RevokedAt == "" {
+		return time.Time{}, false
+	}
+	t, err := parseTime(k.RevokedAt)
+	if err != nil {
+		return time.Time{}, false
+	}
+	return t, true
+}
+
 // Description returns a copy of the latest known description of an
 // instance. Changing the copy does not affect the registry.
 func (r *Registry) Description(id string) (*Description, bool) {

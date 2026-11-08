@@ -227,6 +227,5 @@ Build in the order the transition needs, and start with pieces today's governmen
 
 ### Open questions
 
-- What public ledger design fits: a replicated signed log, or something heavier?
 - Which privacy-preserving credential approach is mature enough for eligibility checks?
 - Who funds and hosts the foundation before any Commonwealth institution exists?

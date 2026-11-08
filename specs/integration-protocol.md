@@ -21,7 +21,7 @@ The reference implementation is the Go package [`protocol`](../protocol/). The c
    1. The body is a valid signed record.
    2. `to` is the recipient's own identifier.
    3. The message type is allowed from the sender's layer to the recipient's layer (see the table below).
-   4. The record's layer matches the sender's instance description, and its signing key is trusted and was valid at `issued_at`.
+   4. The record's layer matches the sender's instance description, its signing key is trusted and was valid at `issued_at`, and the key is not revoked at the time of delivery ([public ledger](public-ledger.md#revoked-keys)).
    5. `issued_at` is no more than 5 minutes in the future by the recipient's clock.
    6. The record has not been accepted before (by `id`).
    7. The application accepts the content (for example, a settlement total is correct).

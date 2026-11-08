@@ -18,6 +18,7 @@ import (
 	"github.com/polycentric-commonwealth/foundation/amount"
 	"github.com/polycentric-commonwealth/foundation/dividend"
 	"github.com/polycentric-commonwealth/foundation/internal/network"
+	"github.com/polycentric-commonwealth/foundation/ledger"
 	"github.com/polycentric-commonwealth/foundation/protocol"
 	"github.com/polycentric-commonwealth/foundation/record"
 )
@@ -173,6 +174,38 @@ func run(w io.Writer) error {
 		st.Sender, confEnv, protocol.StatusAccepted); err != nil {
 		return err
 	}
+
+	// Each side logs the records it sent, and the other witnesses its log.
+	fmt.Fprintln(w, "Public ledger")
+	fmt.Fprintln(w, "-------------")
+	for _, entry := range []struct {
+		node *network.Node
+		env  *record.Envelope
+	}{{st, countEnv}, {cw, settleEnv}, {st, confEnv}} {
+		if _, err := entry.node.Log.Append(entry.env); err != nil {
+			return err
+		}
+	}
+	for _, pair := range [][2]*network.Node{{cw, st}, {st, cw}} {
+		node, witness := pair[0], pair[1]
+		if _, err := node.Log.Checkpoint(); err != nil {
+			return err
+		}
+		if _, err := node.Log.RequestCosignatures(ctx, node.Registry, net.HTTP, []string{witness.Identity.Instance}); err != nil {
+			return err
+		}
+		size, _ := node.Log.Storage.Size()
+		fmt.Fprintf(w, "%s logged %d record(s); its checkpoint was cosigned by %s.\n", node.Identity.Instance, size, witness.Identity.Instance)
+	}
+	ev, err := cw.Log.Evidence(0)
+	if err != nil {
+		return err
+	}
+	witnessed, err := ledger.VerifyEvidence(st.Registry, ev, ledger.WitnessPolicy{Witnesses: []string{stID}, Threshold: 1})
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(w, "Anyone can now prove the settlement existed by %s, witnessed independently.\n\n", witnessed.Format("15:04:05 MST"))
 
 	fmt.Fprintln(w, "Attempts that must fail")
 	fmt.Fprintln(w, "-----------------------")

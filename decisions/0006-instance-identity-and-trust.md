@@ -22,5 +22,5 @@ A central registry contradicts the design's principle that no single body contro
 
 - No one owns the directory. Any party can collect descriptions and attestations and verify the whole chain itself.
 - Taking over an instance's domain is not enough to impersonate it: a verifier that has seen earlier descriptions rejects keys that break continuity, and parent attestations do not change.
-- A stolen key can sign records with a backdated `issued_at`. Revocation limits new damage, but fully closing this gap needs independent timestamps, which the public ledger specification will provide.
+- A stolen key can sign records with a backdated `issued_at`. Revocation limits new damage, but fully closing this gap needs independent timestamps, which the [public ledger](0008-public-ledger.md) provides.
 - Changing an instance's layer or parent is not supported in 0.1; it will need a defined procedure later.

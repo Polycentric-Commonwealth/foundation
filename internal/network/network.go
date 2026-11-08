@@ -14,6 +14,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/polycentric-commonwealth/foundation/ledger"
 	"github.com/polycentric-commonwealth/foundation/protocol"
 	"github.com/polycentric-commonwealth/foundation/record"
 	"github.com/polycentric-commonwealth/foundation/registry"
@@ -35,12 +36,17 @@ type Node struct {
 	Store       *protocol.MemoryStore
 	Receiver    *protocol.Receiver
 	Sender      *protocol.Sender
+	Log         *ledger.Log
+	Witness     *ledger.Witness
 	Server      *httptest.Server
 }
 
 // Network is a set of running instances.
 type Network struct {
 	Nodes map[string]*Node
+
+	// HTTP is a client that trusts every node's server certificate.
+	HTTP *http.Client
 }
 
 // Close stops every server.
@@ -81,13 +87,13 @@ func Start(specs ...Spec) (*Network, error) {
 			Identity: protocol.Identity{Instance: s.Instance, Layer: s.Layer, KeyID: "k1", Key: priv},
 			Store:    protocol.NewMemoryStore(),
 		}
-		node.Server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/"+protocol.InboxPath {
-				http.NotFound(w, r)
-				return
-			}
-			node.Receiver.ServeHTTP(w, r)
-		}))
+		mux := http.NewServeMux()
+		mux.HandleFunc("/"+protocol.InboxPath, func(w http.ResponseWriter, r *http.Request) { node.Receiver.ServeHTTP(w, r) })
+		mux.HandleFunc("/"+ledger.WitnessPath, func(w http.ResponseWriter, r *http.Request) { node.Witness.ServeHTTP(w, r) })
+		mux.Handle("/ledger/", http.StripPrefix("/ledger", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			node.Log.Handler().ServeHTTP(w, r)
+		})))
+		node.Server = httptest.NewTLSServer(mux)
 		net.Nodes[s.Instance] = node
 		pool.AddCert(node.Server.Certificate())
 
@@ -150,7 +156,66 @@ func Start(specs ...Spec) (*Network, error) {
 		node.Registry = reg
 		node.Receiver = &protocol.Receiver{Self: node.Identity, Registry: reg, Store: node.Store, Handlers: map[string]protocol.Handler{}}
 		node.Sender = &protocol.Sender{Self: node.Identity, Registry: reg, HTTP: client}
+		node.Log = ledger.NewLog(node.Identity, nil)
+		node.Witness = &ledger.Witness{Self: node.Identity, Registry: reg, Store: &ledger.MemoryWitnessStore{}}
 	}
+	net.HTTP = client
 	ok = true
 	return net, nil
+}
+
+// RevokeAndReplace gives an instance a new key, attested by its parent, and
+// publishes a description that revokes its current key from revokedAt. Every
+// node's registry receives the attestation and the new description, and the
+// node switches to signing with the new key.
+func (n *Network) RevokeAndReplace(instance string, revokedAt time.Time) error {
+	node, ok := n.Nodes[instance]
+	if !ok {
+		return fmt.Errorf("network: no instance %s", instance)
+	}
+	parent, ok := n.Nodes[node.Description.Parent]
+	if !ok {
+		return fmt.Errorf("network: %s has no parent in the network", instance)
+	}
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return err
+	}
+	newID := fmt.Sprintf("k%d", len(node.Description.Keys)+1)
+	now := time.Now().UTC().Truncate(time.Second)
+
+	desc := *node.Description
+	desc.Keys = append([]registry.Key(nil), node.Description.Keys...)
+	for i := range desc.Keys {
+		if desc.Keys[i].ID == node.Identity.KeyID {
+			desc.Keys[i].RevokedAt = revokedAt.UTC().Format(time.RFC3339)
+		}
+	}
+	desc.Keys = append(desc.Keys, registry.Key{ID: newID, PublicKey: registry.EncodePublicKey(pub), ValidFrom: now.Add(-time.Minute).Format(time.RFC3339)})
+
+	att, err := registry.NewAttestation(parent.Identity.Instance, parent.Identity.Layer, parent.Identity.KeyID, parent.Identity.Key,
+		&registry.Attestation{Subject: instance, SubjectLayer: desc.Layer,
+			Keys: []registry.AttestedKey{{ID: newID, PublicKey: registry.EncodePublicKey(pub)}}})
+	if err != nil {
+		return err
+	}
+	// The new description must be dated after the previous one.
+	time.Sleep(1100 * time.Millisecond)
+	d, err := registry.NewDescription(&desc, newID, priv)
+	if err != nil {
+		return err
+	}
+	for _, other := range n.Nodes {
+		if err := other.Registry.AddAttestation(att); err != nil {
+			return fmt.Errorf("%s: %w", other.Identity.Instance, err)
+		}
+		if err := other.Registry.AddDescription(d); err != nil {
+			return fmt.Errorf("%s: %w", other.Identity.Instance, err)
+		}
+	}
+	node.Description = &desc
+	node.Identity.KeyID, node.Identity.Key = newID, priv
+	node.Receiver.Self, node.Sender.Self, node.Witness.Self = node.Identity, node.Identity, node.Identity
+	node.Log.Self = node.Identity
+	return nil
 }

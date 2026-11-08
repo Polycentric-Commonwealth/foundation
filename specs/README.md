@@ -12,7 +12,7 @@ The Commonwealth protocol: everything a platform must implement to interoperate 
 | [Integration protocol](integration-protocol.md) | Delivery to inboxes, signed receipts, message types and the dividend settlement flow | Draft 0.1, implemented in [`protocol/`](../protocol/) and [`dividend/`](../dividend/) |
 | [Instance registry](instance-registry.md) | How instances publish their identity, layer, keys and endpoints, and how verifiers decide which keys to trust | Draft 0.1, implemented in [`registry/`](../registry/) |
 | Federated identity | State-issued identifiers and privacy-preserving credentials | Not started |
-| Public ledger | The append-only log of official acts and how it is replicated | Not started |
+| [Public ledger](public-ledger.md) | Each instance's append-only log of official acts, witness cosigning, and evidence that a record existed by a given time | Draft 0.1, implemented in [`ledger/`](../ledger/) |
 | [Data schemas](schemas/) | Common formats for laws, budgets, statistics, payments and counts | Receipt and dividend schemas drafted |
 | Conformance suite | Tests that prove an implementation follows the above | Not started |
 
@@ -25,6 +25,7 @@ Adopted ([decision 0005](../decisions/0005-record-format-choices.md)):
 - **JSON Canonicalization Scheme (RFC 8785)** for the bytes that are signed.
 - **Ed25519 (RFC 8032)** signatures.
 - **UUID version 7 (RFC 9562)** record identifiers.
+- **Merkle tree hashing and proofs from RFC 9162** for the public ledger ([decision 0008](../decisions/0008-public-ledger.md)).
 - **HTTPS** for delivery, and **JSON Schema** (draft 2020-12) for payloads ([decision 0007](../decisions/0007-integration-transport-and-receipts.md)).
 
 Candidates under consideration:

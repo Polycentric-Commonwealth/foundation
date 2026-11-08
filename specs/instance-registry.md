@@ -53,7 +53,7 @@ Each key has:
 | `valid_until` | Optional. Time after which the key may no longer sign (planned retirement). |
 | `revoked_at` | Optional. Time from which the key is considered compromised. |
 
-A key is **valid at time t** if `valid_from` ≤ t, and t is before `valid_until` and before `revoked_at` where those are present. A record verifies only if its signing key was valid at the record's `issued_at`.
+A key is **valid at time t** if `valid_from` ≤ t, and t is before `valid_until` and before `revoked_at` where those are present. A record verifies only if its signing key was valid at the record's `issued_at`. Once a key is revoked, its earlier records also need [ledger evidence](public-ledger.md#revoked-keys) that they existed before the revocation.
 
 The description MUST be signed by one of its own keys that is valid at its `issued_at`.
 
@@ -110,6 +110,6 @@ This lets an instance rotate keys on its own, and lets the parent restore contro
 ## Still to decide
 
 - [ ] Changing an instance's parent or layer.
-- [ ] Independent timestamps, so a stolen key cannot sign records with a backdated `issued_at` (public ledger specification).
+- [x] Independent timestamps, so a stolen key cannot sign records with a backdated `issued_at`: see [revoked keys](public-ledger.md#revoked-keys) in the public ledger.
 - [ ] How verifiers fetch and refresh descriptions, and how long they may cache them.
 - [ ] Withdrawing an attestation, for example when a State leaves the Commonwealth.

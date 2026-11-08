@@ -17,3 +17,4 @@ Each record is a numbered Markdown file with these sections: **Status** (propose
 | [0005](0005-record-format-choices.md) | RFC 8785 canonical JSON, integer-only numbers, Ed25519, UUID version 7 | Accepted for draft 0.1 |
 | [0006](0006-instance-identity-and-trust.md) | Domain-name identifiers, signed self-descriptions and a chain of parent attestations | Accepted for draft 0.1 |
 | [0007](0007-integration-transport-and-receipts.md) | HTTPS inboxes, signed recipients, signed receipts and idempotent delivery | Accepted for draft 0.1 |
+| [0008](0008-public-ledger.md) | Per-instance transparency logs, cosigned by witnesses, as the public ledger | Accepted for draft 0.1 |

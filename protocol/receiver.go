@@ -149,6 +149,9 @@ func (rv *Receiver) Receive(ctx context.Context, body []byte) (Receipt, *record.
 	if rv.Now != nil {
 		now = rv.Now
 	}
+	if revoked, ok := rv.Registry.RevokedAt(env.Issuer, env.Key); ok && !now().Before(revoked) {
+		return reject(id, typ, ReasonUntrusted, "signing key has been revoked; sign with a current key"), env
+	}
 	if at, _ := env.IssuedAtTime(); at.After(now().Add(MaxClockSkew)) {
 		return reject(id, typ, ReasonFutureDated, "issued_at is in the future"), env
 	}
