@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/audit-response-1.json",
+  "title": "audit-response/1",
+  "description": "A State's openings of the sampled entries. Contains personal data for the sampled people only: never logged, deleted after the finding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request", "count", "openings"],
+  "properties": {
+    "request": { "$ref": "#/$defs/id" },
+    "count": { "$ref": "#/$defs/id" },
+    "openings": {
+      "type": "array",
+      "maxItems": 600,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "commitment", "salt", "ref", "name", "birth_date", "inclusion"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+          "commitment": { "$ref": "#/$defs/hash" },
+          "salt": { "$ref": "#/$defs/hash" },
+          "ref": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "birth_date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "inclusion": { "type": "array", "maxItems": 64, "items": { "$ref": "#/$defs/hash" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "hash": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" }
+  }
+}

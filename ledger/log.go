@@ -164,8 +164,10 @@ func NewLog(self protocol.Identity, storage Storage) *Log {
 	return &Log{Self: self, Storage: storage}
 }
 
-// notLoggable lists record types that must never be logged.
-var notLoggable = map[string]bool{CheckpointType: true, CosignatureType: true}
+// notLoggable lists record types that must never be logged: checkpoints and
+// cosignatures describe the log itself, and audit responses carry personal
+// data (specs/eligibility-audit.md).
+var notLoggable = map[string]bool{CheckpointType: true, CosignatureType: true, "audit-response/1": true}
 
 // Append adds a record issued by this instance and signed with its current
 // key, and returns its index.

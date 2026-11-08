@@ -109,6 +109,79 @@ func TestProofsExhaustively(t *testing.T) {
 	}
 }
 
+// The definitions from RFC 9162, written directly, as a reference for Tree.
+func refRoot(leaves []Hash) Hash {
+	switch len(leaves) {
+	case 0:
+		return EmptyRoot
+	case 1:
+		return leaves[0]
+	}
+	k := split(uint64(len(leaves)))
+	return nodeHash(refRoot(leaves[:k]), refRoot(leaves[k:]))
+}
+
+func refPath(m uint64, leaves []Hash) []Hash {
+	n := uint64(len(leaves))
+	if n <= 1 {
+		return nil
+	}
+	k := split(n)
+	if m < k {
+		return append(refPath(m, leaves[:k]), refRoot(leaves[k:]))
+	}
+	return append(refPath(m-k, leaves[k:]), refRoot(leaves[:k]))
+}
+
+func refSubproof(m uint64, leaves []Hash, complete bool) []Hash {
+	n := uint64(len(leaves))
+	if m == n {
+		if complete {
+			return nil
+		}
+		return []Hash{refRoot(leaves)}
+	}
+	k := split(n)
+	if m <= k {
+		return append(refSubproof(m, leaves[:k], complete), refRoot(leaves[k:]))
+	}
+	return append(refSubproof(m-k, leaves[k:], false), refRoot(leaves[:k]))
+}
+
+func equalHashes(a, b []Hash) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestTreeMatchesDefinitions(t *testing.T) {
+	all := leafHashes(100)
+	for n := 0; n <= 100; n++ {
+		tree := NewTree(all[:n])
+		if tree.Root() != refRoot(all[:n]) {
+			t.Fatalf("root of %d leaves differs", n)
+		}
+		for m := uint64(0); m < uint64(n); m++ {
+			p, _ := tree.InclusionProof(m)
+			if !equalHashes(p, refPath(m, all[:n])) {
+				t.Fatalf("inclusion proof %d of %d differs", m, n)
+			}
+		}
+		for m := uint64(1); m < uint64(n); m++ {
+			p, _ := tree.ConsistencyProof(m)
+			if !equalHashes(p, refSubproof(m, all[:n], true)) {
+				t.Fatalf("consistency proof %d to %d differs", m, n)
+			}
+		}
+	}
+}
+
 func TestProofBounds(t *testing.T) {
 	leaves := leafHashes(4)
 	if _, err := InclusionProof(4, leaves); err == nil {

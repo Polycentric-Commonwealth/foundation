@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/polycentric-commonwealth/foundation/specs/schemas/audit-request-1.json",
+  "title": "audit-request/1",
+  "description": "The Audit Office asks a State to open a random sample of an eligibility count's recipient list.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["count", "seed", "sample_size"],
+  "properties": {
+    "count": { "$ref": "#/$defs/id" },
+    "seed": { "description": "32 random bytes, unpadded base64url.", "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+    "sample_size": { "type": "integer", "minimum": 1, "maximum": 600 }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" }
+  }
+}

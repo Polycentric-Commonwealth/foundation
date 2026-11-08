@@ -46,66 +46,107 @@ func split(n uint64) uint64 {
 	return 1 << (bits.Len64(n-1) - 1)
 }
 
-// RootHash returns the Merkle tree hash of the given leaf hashes (RFC 9162,
-// section 2.1.1).
-func RootHash(leaves []Hash) Hash {
-	switch len(leaves) {
-	case 0:
-		return EmptyRoot
-	case 1:
-		return leaves[0]
-	}
-	k := split(uint64(len(leaves)))
-	return nodeHash(RootHash(leaves[:k]), RootHash(leaves[k:]))
+// Tree holds every perfect subtree hash of a list of leaves, so the root and
+// any proof can be computed in logarithmic time after one linear pass.
+type Tree struct {
+	levels [][]Hash // levels[k][i] is the hash of leaves [i·2^k, (i+1)·2^k)
+	size   uint64
 }
 
-// InclusionProof returns the audit path for leaf index m in a tree of the
-// given leaves (RFC 9162, section 2.1.3.1).
-func InclusionProof(m uint64, leaves []Hash) ([]Hash, error) {
-	if m >= uint64(len(leaves)) {
+// NewTree builds the tree over the given leaf hashes.
+func NewTree(leaves []Hash) *Tree {
+	t := &Tree{levels: [][]Hash{leaves}, size: uint64(len(leaves))}
+	for level := leaves; len(level) > 1; {
+		next := make([]Hash, len(level)/2)
+		for i := range next {
+			next[i] = nodeHash(level[2*i], level[2*i+1])
+		}
+		t.levels = append(t.levels, next)
+		level = next
+	}
+	return t
+}
+
+// Size returns the number of leaves.
+func (t *Tree) Size() uint64 { return t.size }
+
+// Root returns the Merkle tree hash (RFC 9162, section 2.1.1).
+func (t *Tree) Root() Hash {
+	if t.size == 0 {
+		return EmptyRoot
+	}
+	return t.hash(0, t.size)
+}
+
+// hash returns the hash of the n leaves starting at start, where the range
+// is a subtree of the RFC 9162 tree.
+func (t *Tree) hash(start, n uint64) Hash {
+	if n&(n-1) == 0 && start%n == 0 {
+		return t.levels[bits.TrailingZeros64(n)][start/n]
+	}
+	k := split(n)
+	return nodeHash(t.hash(start, k), t.hash(start+k, n-k))
+}
+
+// InclusionProof returns the audit path for leaf index m (RFC 9162, section
+// 2.1.3.1).
+func (t *Tree) InclusionProof(m uint64) ([]Hash, error) {
+	if m >= t.size {
 		return nil, errors.New("ledger: index out of range")
 	}
-	return path(m, leaves), nil
+	return t.path(m, 0, t.size), nil
 }
 
-func path(m uint64, leaves []Hash) []Hash {
-	n := uint64(len(leaves))
+func (t *Tree) path(m, start, n uint64) []Hash {
 	if n <= 1 {
 		return nil
 	}
 	k := split(n)
 	if m < k {
-		return append(path(m, leaves[:k]), RootHash(leaves[k:]))
+		return append(t.path(m, start, k), t.hash(start+k, n-k))
 	}
-	return append(path(m-k, leaves[k:]), RootHash(leaves[:k]))
+	return append(t.path(m-k, start+k, n-k), t.hash(start, k))
 }
 
 // ConsistencyProof returns the proof that the tree of the first m leaves is
-// a prefix of the tree of all leaves (RFC 9162, section 2.1.4.1).
-func ConsistencyProof(m uint64, leaves []Hash) ([]Hash, error) {
-	n := uint64(len(leaves))
-	if m > n {
+// a prefix of this tree (RFC 9162, section 2.1.4.1).
+func (t *Tree) ConsistencyProof(m uint64) ([]Hash, error) {
+	if m > t.size {
 		return nil, errors.New("ledger: first size larger than second")
 	}
-	if m == 0 || m == n {
+	if m == 0 || m == t.size {
 		return nil, nil
 	}
-	return subproof(m, leaves, true), nil
+	return t.subproof(m, 0, t.size, true), nil
 }
 
-func subproof(m uint64, leaves []Hash, complete bool) []Hash {
-	n := uint64(len(leaves))
+func (t *Tree) subproof(m, start, n uint64, complete bool) []Hash {
 	if m == n {
 		if complete {
 			return nil
 		}
-		return []Hash{RootHash(leaves)}
+		return []Hash{t.hash(start, n)}
 	}
 	k := split(n)
 	if m <= k {
-		return append(subproof(m, leaves[:k], complete), RootHash(leaves[k:]))
+		return append(t.subproof(m, start, k, complete), t.hash(start+k, n-k))
 	}
-	return append(subproof(m-k, leaves[k:], false), RootHash(leaves[:k]))
+	return append(t.subproof(m-k, start+k, n-k, false), t.hash(start, k))
+}
+
+// RootHash returns the Merkle tree hash of the given leaf hashes.
+func RootHash(leaves []Hash) Hash { return NewTree(leaves).Root() }
+
+// InclusionProof returns the audit path for leaf index m in a tree of the
+// given leaves. To compute many proofs over the same leaves, use a Tree.
+func InclusionProof(m uint64, leaves []Hash) ([]Hash, error) {
+	return NewTree(leaves).InclusionProof(m)
+}
+
+// ConsistencyProof returns the proof that the tree of the first m leaves is
+// a prefix of the tree of all leaves.
+func ConsistencyProof(m uint64, leaves []Hash) ([]Hash, error) {
+	return NewTree(leaves).ConsistencyProof(m)
 }
 
 // VerifyInclusion checks that leaf is at index in a tree of the given size

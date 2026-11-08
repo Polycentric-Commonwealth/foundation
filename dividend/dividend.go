@@ -9,6 +9,7 @@ package dividend
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,12 +44,14 @@ var (
 )
 
 // EligibilityCount is the payload of eligibility-count/1: a State's counts
-// for one period, with no personal data.
+// for one period, with no personal data. RecipientsRoot commits the State to
+// the list of people counted, for auditing (specs/eligibility-audit.md).
 type EligibilityCount struct {
 	Period             string `json:"period"`
 	Residents          int64  `json:"residents"`
 	Adults             int64  `json:"adults"`
 	DividendRecipients int64  `json:"dividend_recipients"`
+	RecipientsRoot     string `json:"recipients_root"`
 }
 
 // Validate checks the count's fields.
@@ -61,6 +64,9 @@ func (c *EligibilityCount) Validate() error {
 	}
 	if c.Adults > c.Residents || c.DividendRecipients > c.Residents {
 		return invalid("adults and dividend recipients cannot exceed residents")
+	}
+	if b, err := base64.RawURLEncoding.DecodeString(c.RecipientsRoot); err != nil || len(b) != 32 {
+		return invalid("recipients_root must be a 32-byte hash in unpadded base64url")
 	}
 	return nil
 }

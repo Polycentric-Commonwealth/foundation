@@ -16,6 +16,7 @@ import (
 	"sync/atomic"
 
 	"github.com/polycentric-commonwealth/foundation/amount"
+	"github.com/polycentric-commonwealth/foundation/audit"
 	"github.com/polycentric-commonwealth/foundation/dividend"
 	"github.com/polycentric-commonwealth/foundation/internal/network"
 	"github.com/polycentric-commonwealth/foundation/ledger"
@@ -140,7 +141,17 @@ func run(w io.Writer) error {
 	fmt.Fprintln(w, "The flow")
 	fmt.Fprintln(w, "--------")
 
-	count := dividend.EligibilityCount{Period: "2027-01", Residents: 5302114, Adults: 4120533, DividendRecipients: 5302114}
+	// A real State commits to its list of residents (see the audit package);
+	// the demo commits to a list of placeholder references.
+	refs := make([]string, 52114)
+	for i := range refs {
+		refs[i] = fmt.Sprintf("R-%07d", i+1)
+	}
+	_, root, err := audit.BuildList(refs)
+	if err != nil {
+		return err
+	}
+	count := dividend.EligibilityCount{Period: "2027-01", Residents: 52114, Adults: 40533, DividendRecipients: 52114, RecipientsRoot: ledger.EncodeHash(root)}
 	countEnv, err := st.Identity.Message(cwID, dividend.EligibilityCountType, count)
 	if err != nil {
 		return err

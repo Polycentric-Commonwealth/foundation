@@ -9,7 +9,7 @@ The reference implementation is the Go package [`protocol`](../protocol/). The c
 ## Principles
 
 - **Optional for operation.** A platform keeps working when disconnected; senders retry until delivered.
-- **Least data.** Each message type carries only what the receiving layer's enumerated powers require. There is no message type for bulk personal data.
+- **Least data.** Each message type carries only what the receiving layer's enumerated powers require. There is no message type for bulk personal data; the only type with any personal data, `audit-response/1`, carries a small random sample for auditing.
 - **Signed end to end.** Every message is a signed record, verified against the [instance registry](instance-registry.md). TLS protects confidentiality, not identity.
 - **Versioned.** Message types carry a major version; recipients accept the current and previous major version.
 
@@ -47,9 +47,12 @@ Payload of a `receipt/1` record ([schema](schemas/receipt-1.json)):
 
 | Type | From → to | Purpose | Schema |
 | --- | --- | --- | --- |
-| `eligibility-count/1` | State → Commonwealth | Counts of residents, adults and dividend recipients for a period; no names | [schema](schemas/eligibility-count-1.json) |
+| `eligibility-count/1` | State → Commonwealth | Counts of residents, adults and dividend recipients for a period, and the root of the committed [recipient list](eligibility-audit.md#recipient-list); no names | [schema](schemas/eligibility-count-1.json) |
 | `dividend-settlement/1` | Commonwealth → State | Per-person dividend and total owed for a period, based on an eligibility count | [schema](schemas/dividend-settlement-1.json) |
 | `dividend-confirmation/1` | State → Commonwealth | Aggregate confirmation that a settlement was paid | [schema](schemas/dividend-confirmation-1.json) |
+| `audit-request/1` | Commonwealth → State | Asks the State to open a random sample of a count's recipient list ([eligibility audit](eligibility-audit.md)) | [schema](schemas/audit-request-1.json) |
+| `audit-response/1` | State → Commonwealth | The sampled openings. **The only type carrying personal data**: at most 600 people, never logged | [schema](schemas/audit-response-1.json) |
+| `audit-finding/1` | Commonwealth → State | Totals of the audit and any repayment owed | [schema](schemas/audit-finding-1.json) |
 
 Planned: `rent-report/1` (State → Commonwealth) and `sortition-seed/1` (Commonwealth → State).
 
@@ -70,6 +73,8 @@ sequenceDiagram
 ```
 
 Amounts are decimal strings, as the record format requires: up to 18 digits before the decimal point and up to 6 after, with no sign, exponent or leading zeros. Amounts are compared by value, so `"25.5"` and `"25.50"` are equal. The `unit` of account for the dividend is provisionally `XCU`, the Commonwealth's basket unit.
+
+Every count is subject to an [eligibility audit](eligibility-audit.md) of a random sample of its committed recipient list.
 
 The settlement's `recipients` MUST equal the `dividend_recipients` in the eligibility count named by `basis`, and `total` MUST equal `per_person × recipients`. A State SHOULD refuse a settlement that does not match, and the Commonwealth SHOULD refuse a confirmation whose `paid_total` exceeds the settlement total.
 

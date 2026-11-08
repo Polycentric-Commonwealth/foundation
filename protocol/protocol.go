@@ -34,6 +34,9 @@ var MessageTypes = map[string][]Route{
 	"eligibility-count/1":     {{record.State, record.Commonwealth}},
 	"dividend-settlement/1":   {{record.Commonwealth, record.State}},
 	"dividend-confirmation/1": {{record.State, record.Commonwealth}},
+	"audit-request/1":         {{record.Commonwealth, record.State}},
+	"audit-response/1":        {{record.State, record.Commonwealth}},
+	"audit-finding/1":         {{record.Commonwealth, record.State}},
 }
 
 // Allowed reports whether a message of type typ may be sent from layer from

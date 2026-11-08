@@ -12,6 +12,9 @@ Schemas describe the payload only. The rules that span several records, such as 
 | [`eligibility-count-1.json`](eligibility-count-1.json) | State to Commonwealth counts |
 | [`dividend-settlement-1.json`](dividend-settlement-1.json) | Commonwealth to State dividend instruction |
 | [`dividend-confirmation-1.json`](dividend-confirmation-1.json) | State to Commonwealth payment confirmation |
+| [`audit-request-1.json`](audit-request-1.json) | Audit Office's request to open a sample |
+| [`audit-response-1.json`](audit-response-1.json) | State's openings of the sample (the only schema with personal data) |
+| [`audit-finding-1.json`](audit-finding-1.json) | Audit result and repayment |
 
 Instance descriptions and attestations are defined in prose in the [instance registry](../instance-registry.md) specification; schemas for them will follow.
 

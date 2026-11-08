@@ -36,7 +36,10 @@ func settlementRecord(t *testing.T, s *Settlement) *record.Envelope {
 	return env
 }
 
-var count = EligibilityCount{Period: "2027-01", Residents: 5302114, Adults: 4120533, DividendRecipients: 5302114}
+// testRoot is a placeholder recipients_root; the audit package tests real lists.
+const testRoot = "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU"
+
+var count = EligibilityCount{Period: "2027-01", Residents: 5302114, Adults: 4120533, DividendRecipients: 5302114, RecipientsRoot: testRoot}
 
 func TestSettlementFlow(t *testing.T) {
 	cr := countRecord(t, count)
@@ -104,10 +107,12 @@ func TestCommonwealthRefusesOverpayment(t *testing.T) {
 
 func TestCountValidation(t *testing.T) {
 	for name, c := range map[string]EligibilityCount{
-		"bad period":      {Period: "2027-13", Residents: 1},
-		"negative":        {Period: "2027-01", Residents: -1},
-		"more adults":     {Period: "2027-01", Residents: 1, Adults: 2},
-		"more recipients": {Period: "2027-01", Residents: 1, DividendRecipients: 2},
+		"bad period":      {Period: "2027-13", Residents: 1, RecipientsRoot: testRoot},
+		"negative":        {Period: "2027-01", Residents: -1, RecipientsRoot: testRoot},
+		"more adults":     {Period: "2027-01", Residents: 1, Adults: 2, RecipientsRoot: testRoot},
+		"more recipients": {Period: "2027-01", Residents: 1, DividendRecipients: 2, RecipientsRoot: testRoot},
+		"missing root":    {Period: "2027-01", Residents: 1},
+		"short root":      {Period: "2027-01", Residents: 1, RecipientsRoot: "abc"},
 	} {
 		if err := c.Validate(); !errors.Is(err, ErrInvalid) {
 			t.Errorf("%s: got %v, want ErrInvalid", name, err)

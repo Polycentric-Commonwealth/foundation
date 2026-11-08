@@ -5,14 +5,19 @@
   "description": "A State's counts for one period. Counts only: no names or other personal data.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["period", "residents", "adults", "dividend_recipients"],
+  "required": ["period", "residents", "adults", "dividend_recipients", "recipients_root"],
   "properties": {
     "period": { "$ref": "#/$defs/period" },
     "residents": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
     "adults": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-    "dividend_recipients": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+    "dividend_recipients": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "recipients_root": {
+      "description": "Merkle root of the committed recipient list (specs/eligibility-audit.md), unpadded base64url.",
+      "$ref": "#/$defs/hash"
+    }
   },
   "$defs": {
+    "hash": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
     "period": {
       "description": "Calendar month, YYYY-MM.",
       "type": "string",
