@@ -124,9 +124,13 @@ func (w *Witness) Cosign(req *WitnessRequest) (*record.Envelope, error) {
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	prev, _, err := w.Store.Get(origin)
+	prev, known, err := w.Store.Get(origin)
 	if err != nil {
 		return nil, refuse(http.StatusServiceUnavailable, "storage unavailable")
+	}
+	if !known {
+		// A log the witness has never seen starts out empty.
+		prev = WitnessState{Size: 0, Root: EmptyRoot}
 	}
 	if req.OldSize != prev.Size {
 		return nil, &WitnessError{Status: http.StatusConflict, Size: prev.Size, Detail: "old_size does not match"}

@@ -525,3 +525,15 @@ func TestCheckpointsSurviveRestart(t *testing.T) {
 		t.Error("no latest checkpoint after restart")
 	}
 }
+
+func TestWitnessCosignsEmptyLog(t *testing.T) {
+	net := start(t)
+	st := net.Nodes[stID]
+	if n := publish(t, net, st); n != 3 {
+		t.Fatalf("empty log: %d cosignatures", n)
+	}
+	logRecord(t, st, 1, nil)
+	if n := publish(t, net, st); n != 3 {
+		t.Fatalf("after first entry: %d cosignatures", n)
+	}
+}
