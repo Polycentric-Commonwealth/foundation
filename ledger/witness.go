@@ -72,6 +72,11 @@ type Witness struct {
 	// Now returns the current time; it defaults to time.Now.
 	Now func() time.Time
 
+	// Discover, if set, is called once when a checkpoint's issuer is
+	// unknown or its key untrusted, to fetch the issuer's description and
+	// attestations (registry.Fetcher.Discover).
+	Discover func(ctx context.Context, instance string) error
+
 	mu sync.Mutex
 }
 
@@ -108,6 +113,15 @@ func (w *Witness) Cosign(req *WitnessRequest) (*record.Envelope, error) {
 		return nil, refuse(http.StatusUnprocessableEntity, "a witness does not cosign its own log")
 	}
 	cp, root, err := VerifyCheckpoint(w.Registry, req.Checkpoint)
+	if err != nil && w.Discover != nil {
+		if _, revoked := w.Registry.RevokedAt(origin, req.Checkpoint.Key); !revoked {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			if w.Discover(ctx, origin) == nil {
+				cp, root, err = VerifyCheckpoint(w.Registry, req.Checkpoint)
+			}
+			cancel()
+		}
+	}
 	if err != nil {
 		return nil, refuse(http.StatusUnprocessableEntity, "checkpoint: %v", err)
 	}

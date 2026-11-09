@@ -537,3 +537,26 @@ func TestWitnessCosignsEmptyLog(t *testing.T) {
 		t.Fatalf("after first entry: %d cosignatures", n)
 	}
 }
+
+func TestWitnessDiscoversUnknownLog(t *testing.T) {
+	net := start(t)
+	st, w := net.Nodes[stID], net.Nodes[w1ID]
+	cwKey, _ := net.Nodes[cwID].Description.Key("k1")
+	fresh, err := registry.New(registry.Anchor{Instance: cwID, PublicKey: cwKey.PublicKey})
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.Witness.Registry = fresh
+	logRecord(t, st, 1, nil)
+	if _, err := st.Log.Checkpoint(); err != nil {
+		t.Fatal(err)
+	}
+	if n, _ := st.Log.RequestCosignatures(context.Background(), st.Registry, net.HTTP, []string{w1ID}); n != 0 {
+		t.Fatalf("witness without discovery cosigned an unknown log")
+	}
+	f := &registry.Fetcher{Registry: fresh, HTTP: net.HTTP, Origin: func(id string) string { return net.Nodes[id].Server.URL }}
+	w.Witness.Discover = f.Discover
+	if n, err := st.Log.RequestCosignatures(context.Background(), st.Registry, net.HTTP, []string{w1ID}); n != 1 {
+		t.Fatalf("with discovery: %d cosignatures, %v", n, err)
+	}
+}
