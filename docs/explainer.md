@@ -38,6 +38,7 @@ The project is at an early stage. Everything here is a working draft, not produc
 | Protocol specifications | Signed records, the instance registry, delivery between governments, the public ledger, eligibility audits, the XCU unit of account and federated identity | [`specs/`](../specs/) |
 | Core library | A Go implementation of every specification, with tests | This repository |
 | State platform | A web application a State can run: residents' register, the dividend cycle, audits and its public ledger | [`platform-state`](https://github.com/Polycentric-Commonwealth/platform-state) |
+| Commonwealth platform | Attesting members, the Commons Fund's dividend settlement, the Audit Office and the uniqueness registry | [`platform-commonwealth`](https://github.com/Polycentric-Commonwealth/platform-commonwealth) |
 
 To see it work, install [Go](https://go.dev/dl/) and run `go run ./cmd/pcdemo` in this repository, which settles a dividend between a Commonwealth and a State. Or start the State platform's development network, which runs a whole State in your browser, including a stand-in Commonwealth that audits it.
 

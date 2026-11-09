@@ -25,7 +25,7 @@ The system has four layers of government: **Commonwealth** (global), **Region**,
 
 The platforms never share code by necessity. They interoperate only through the protocols defined in this repository, so a State can rewrite its platform from scratch and still connect, as long as it passes the conformance suite.
 
-The first platform, [`platform-state`](https://github.com/Polycentric-Commonwealth/platform-state), runs the dividend cycle, the residents' register and the State's public ledger. The others (`platform-commonwealth`, `platform-region`, `platform-locality`) will be created as each one is built.
+Two platforms work today: [`platform-state`](https://github.com/Polycentric-Commonwealth/platform-state) runs the residents' register, the dividend cycle and the State's public ledger, and [`platform-commonwealth`](https://github.com/Polycentric-Commonwealth/platform-commonwealth) attests members, settles dividends, runs audits and keeps the uniqueness registry. Deployed side by side, they run a full dividend period across separate servers. [`platform-region`](https://github.com/Polycentric-Commonwealth/platform-region) and [`platform-locality`](https://github.com/Polycentric-Commonwealth/platform-locality) are not started yet.
 
 ## Status
 
