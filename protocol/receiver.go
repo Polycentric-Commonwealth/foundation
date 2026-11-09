@@ -72,6 +72,11 @@ type Receiver struct {
 	// Now returns the current time; it defaults to time.Now.
 	Now func() time.Time
 
+	// Discover, if set, is called once when a record's issuer is unknown or
+	// its signing key is not trusted, to fetch the issuer's description and
+	// attestations (registry.Fetcher.Discover); the checks then run again.
+	Discover func(ctx context.Context, instance string) error
+
 	// mu serializes the duplicate check, handler and store, so the same
 	// record delivered twice at once is processed only once.
 	mu sync.Mutex
@@ -137,7 +142,15 @@ func (rv *Receiver) Receive(ctx context.Context, body []byte) (Receipt, *record.
 	if rv.Now != nil {
 		now = rv.Now
 	}
-	if reason, detail := Check(rv.Registry, rv.Self, env, now()); reason != "" {
+	reason, detail := Check(rv.Registry, rv.Self, env, now())
+	if reason == ReasonUntrusted && rv.Discover != nil {
+		if _, revoked := rv.Registry.RevokedAt(env.Issuer, env.Key); !revoked {
+			if err := rv.Discover(ctx, env.Issuer); err == nil {
+				reason, detail = Check(rv.Registry, rv.Self, env, now())
+			}
+		}
+	}
+	if reason != "" {
 		return reject(id, typ, reason, detail), env
 	}
 

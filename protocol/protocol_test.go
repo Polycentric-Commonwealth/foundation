@@ -13,6 +13,7 @@ import (
 	"github.com/polycentric-commonwealth/foundation/internal/network"
 	"github.com/polycentric-commonwealth/foundation/protocol"
 	"github.com/polycentric-commonwealth/foundation/record"
+	"github.com/polycentric-commonwealth/foundation/registry"
 )
 
 const (
@@ -190,4 +191,35 @@ func post(t *testing.T, to *network.Node, client *http.Client, env *record.Envel
 	}
 	resp.Body.Close()
 	return resp
+}
+
+// TestDiscoverUnknownSender checks that an inbox with a Discover hook learns
+// about a sender it has never seen, and accepts its record.
+func TestDiscoverUnknownSender(t *testing.T) {
+	net, cw, st := start(t)
+	cwKey, _ := cw.Description.Key("k1")
+	fresh, err := registry.New(registry.Anchor{Instance: cwID, PublicKey: cwKey.PublicKey})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := fresh.AddDescription(cw.Signed); err != nil {
+		t.Fatal(err)
+	}
+	cw.Receiver.Registry = fresh
+	env, err := st.Identity.Message(cwID, "eligibility-count/1", count)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.Sender.Send(context.Background(), env); !errors.Is(err, protocol.ErrRejected) {
+		t.Fatalf("unknown sender without discovery: %v", err)
+	}
+	calls := 0
+	f := &registry.Fetcher{Registry: fresh, HTTP: net.HTTP, Origin: func(id string) string { return net.Nodes[id].Server.URL }}
+	cw.Receiver.Discover = func(ctx context.Context, id string) error { calls++; return f.Discover(ctx, id) }
+	if rc, err := st.Sender.Send(context.Background(), env); err != nil || rc.Status != protocol.StatusAccepted {
+		t.Fatalf("with discovery: %+v, %v", rc, err)
+	}
+	if calls != 1 {
+		t.Errorf("discover called %d times", calls)
+	}
 }
